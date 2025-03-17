@@ -1,4 +1,4 @@
-name: "CodeQL Advanced"
+name: Super Linter
 
 on:
   push:
@@ -7,30 +7,24 @@ on:
     branches: [ "main" ]
 
 jobs:
-  analyze:
-    name: Analyze (${{ matrix.language }})
-    runs-on: ${{ matrix.language == 'swift' && 'macos-latest' || 'ubuntu-latest' }}  # Conditional OS based on language
-    permissions:
-      security-events: write
-      packages: read
-      actions: read
-      contents: read
+  lint:
+    name: Run Super Linter
+    runs-on: ubuntu-latest
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript', 'python' ]  # Supported languages to run CodeQL on
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}  # Language-specific analysis
+          fetch-depth: 0  # Ensure full history for the linter
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:${{ matrix.language }}"  # Corrected category value for better compatibility
+      - name: Run Super Linter
+        uses: super-linter/super-linter@v7.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true  # Validate all codebase files
+          DEFAULT_BRANCH: main  # Specify the default branch for validation
