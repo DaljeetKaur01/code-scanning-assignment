@@ -1,0 +1,32 @@
+name: Bandit Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  bandit_scan:
+    name: Run Bandit Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13.1' 
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit Scan
+        uses: shundor/bandit-action@v1
+        with:
+          path: "."   # Scan the entire repository
+          level: high  # Only show high-severity issues
+          confidence: high  # Only show high-confidence issues
+          exit_zero: true  # Prevent failure even if issues are found
