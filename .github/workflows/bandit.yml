@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12' 
+          python-version: "3.12"
 
       - name: Install Bandit
         run: pip install bandit
@@ -26,4 +26,3 @@ jobs:
       - name: Run Bandit Scan
         run: |
           bandit -r . --severity-level high --confidence-level high || echo "Bandit scan completed with findings."
-       
