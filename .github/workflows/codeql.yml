@@ -2,25 +2,23 @@ name: "CodeQL Advanced"
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
+    branches: [main]
 
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
-      security-events: write
-      packages: read
-      actions: read
       contents: read
-
+      security-events: write # Required for CodeQL
+      actions: read
+      packages: read
     strategy:
       fail-fast: false
       matrix:
         language: ["javascript", "python"]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

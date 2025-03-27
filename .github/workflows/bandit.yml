@@ -10,7 +10,9 @@ jobs:
   bandit_scan:
     name: Run Bandit Security Scan
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      security-events: write # Required to report security findings
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

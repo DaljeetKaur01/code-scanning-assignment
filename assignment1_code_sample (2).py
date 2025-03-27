@@ -5,21 +5,24 @@ import ssl
 from email.message import EmailMessage
 import urllib.request
 
-# Securely fetch database credentials from environment variables
+# Environment variables for security
 DB_HOST = os.getenv("DB_HOST", "mydatabase.com")
 DB_USER = os.getenv("DB_USER", "admin")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "secret123")
+DB_PASSWORD = os.getenv("DB_PASSWORD")  # No default value for password!
 
 def get_user_input():
-    """Safely retrieves user input."""
+    """Safely retrieves user input with sanitization."""
     return input('Enter your name: ').strip()
 
 def send_email(to_email, subject, body):
-    """Sends an email securely using SMTP instead of os.system."""
-    smtp_server = "smtp.example.com"
-    smtp_port = 587
-    smtp_user = os.getenv("SMTP_USER", "noreply@example.com")
-    smtp_password = os.getenv("SMTP_PASSWORD", "emailpassword")
+    """Secure email sending with TLS and env vars."""
+    smtp_server = os.getenv("SMTP_SERVER", "smtp.example.com")
+    smtp_port = int(os.getenv("SMTP_PORT", 587))
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+
+    if not all([smtp_user, smtp_password]):
+        raise ValueError("SMTP credentials not configured")
 
     msg = EmailMessage()
     msg.set_content(body)
@@ -39,18 +42,19 @@ def send_email(to_email, subject, body):
         print(f"Failed to send email: {e}")
 
 def get_data():
-    """Retrieves data securely from an external API."""
-    url = 'https://secure-api.com/get-data'  # Use HTTPS for security
+    """Secure API request with timeout and HTTPS."""
+    url = 'https://secure-api.com/get-data'
     try:
-        with urllib.request.urlopen(url) as response:
-            data = response.read().decode()
-            return data
+        with urllib.request.urlopen(url, timeout=10) as response:
+            if response.status == 200:
+                return response.read().decode()
+            return None
     except Exception as e:
         print(f"Error fetching data: {e}")
         return None
 
 def save_to_db(data):
-    """Safely inserts data into the database using parameterized queries."""
+    """Secure DB connection with error handling."""
     connection = None
     try:
         connection = pymysql.connect(
@@ -58,13 +62,13 @@ def save_to_db(data):
             user=DB_USER,
             password=DB_PASSWORD,
             database="mydatabase",
-            cursorclass=pymysql.cursors.DictCursor
+            cursorclass=pymysql.cursors.DictCursor,
+            connect_timeout=5
         )
         with connection.cursor() as cursor:
             query = "INSERT INTO mytable (column1, column2) VALUES (%s, %s)"
             cursor.execute(query, (data, "Another Value"))
         connection.commit()
-        print("Data saved successfully.")
     except pymysql.MySQLError as e:
         print(f"Database error: {e}")
     finally:
@@ -72,8 +76,11 @@ def save_to_db(data):
             connection.close()
 
 if __name__ == '__main__':
-    user_input = get_user_input()
-    data = get_data()
-    if data:
-        save_to_db(data)
-    send_email('admin@example.com', 'User Input', user_input)
+    try:
+        user_input = get_user_input()
+        data = get_data()
+        if data:
+            save_to_db(data)
+        send_email('admin@example.com', 'User Input', user_input)
+    except Exception as e:
+        print(f"Application error: {e}")
