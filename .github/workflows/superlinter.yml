@@ -3,23 +3,31 @@ name: Lint
 on: [push, pull_request]
 
 jobs:
-  build:
+  lint:
     name: Lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
-      # To report GitHub Actions status checks
       statuses: write
+      security-events: write  # Required for security tools like CHECKOV
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          # super-linter needs the full git history
-          fetch-depth: 0
+          fetch-depth: 0  # Full git history for Super-Linter
 
-      - name: Super-linter
+      - name: Super-Linter
         uses: super-linter/super-linter@v7.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true  # Scan all files, not just changed ones
+          DEFAULT_BRANCH: main         # Replace with your default branch
+
+      - name: Run CHECKOV (Infra Security Scan)
+        if: always()  # Run even if previous steps fail
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .  # Scan all files (or specify a path like "./terraform")
+          soft_fail: false  # Set to true if you want CHECKOV failures to not block CI
