@@ -12,21 +12,28 @@ jobs:
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
       contents: read
-      security-events: write # Required for CodeQL
+      security-events: write
       actions: read
       packages: read
+
     strategy:
       fail-fast: false
       matrix:
         language: ["javascript", "python"]
+
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          queries: +security-extended # Extra security checks
+
+      - name: Autobuild (if needed)
+        if: matrix.language != 'javascript'
+        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

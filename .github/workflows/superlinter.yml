@@ -1,15 +1,15 @@
-name: Lint
+name: Lint and Security Scan
 
 on: [push, pull_request]
 
 jobs:
-  lint:
-    name: Lint
+  lint-and-scan:
+    name: Lint + Security
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      statuses: write # For PR status updates
-      security-events: write # For security tools
+      security-events: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -23,9 +23,15 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: main
 
-      - name: Run CHECKOV
-        if: always()
+      - name: Run Checkov (IaC Security)
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: .
+          output_format: sarif
+          output_file: checkov-results.sarif
           soft_fail: false
+
+      - name: Upload Checkov Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: checkov-results.sarif
