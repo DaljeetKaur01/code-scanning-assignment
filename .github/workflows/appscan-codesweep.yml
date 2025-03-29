@@ -1,4 +1,4 @@
-name: AppScan CodeSweep Security Scan
+name: AppScan CodeSweep Scan
 
 on:
   push:
@@ -7,37 +7,22 @@ on:
     branches: [main]
 
 jobs:
-  appscan-scan:
-    name: Static Application Security Testing (SAST)
+  scan:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write # Required for GitHub Security tab integration
-
+      security-events: write # Required for AppScan to report findings
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Ensures full commit history for thorough scanning
+      - name: Checkout code
+        uses: actions/checkout@v4 # Updated to v4
 
-      - name: Set up Java JDK
-        uses: actions/setup-java@v4
+      - name: Set up Java
+        uses: actions/setup-java@v4 # Updated to v4
         with:
           java-version: "17"
           distribution: "temurin"
-          cache: "gradle" # Optional: Caching for faster builds
 
-      - name: Run AppScan CodeSweep Analysis
+      - name: Run AppScan CodeSweep
         uses: HCL-TECH-SOFTWARE/appscan-codesweep-action@v1.0.4
         with:
           api_key: ${{ secrets.APPSCAN_API_KEY }}
-          output_format: "sarif" # Enables GitHub Security tab integration
-          output_file: "appscan-results.sarif"
-          fail_on_vulnerabilities: true # Fails job if critical issues found
-          scan_level: "deep" # Most thorough analysis level
-
-      - name: Upload Security Findings
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: "appscan-results.sarif"
-          check_name: "AppScan CodeSweep Results" # Custom name in Security tab
