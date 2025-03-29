@@ -23,6 +23,6 @@ jobs:
           distribution: "temurin"
 
       - name: Run AppScan CodeSweep
-        uses: HCL-TECH-SOFTWARE/appscan-codesweep-action@main
+        uses: HCL-TECH-SOFTWARE/appscan-codesweep-action@v2
         with:
           api_key: ${{ secrets.APPSCAN_API_KEY }}
