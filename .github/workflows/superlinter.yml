@@ -1,37 +1,43 @@
-name: Lint and Security Scan
+name: Super-Linter
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  lint-and-scan:
-    name: Lint + Security
+  super-linter:
+    name: Lint Code Base
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
+      statuses: write # Required for status reporting
+      checks: write # Required for checks API
+      pull-requests: write # For PR comments
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Full history for proper analysis
 
-      - name: Super-Linter
+      - name: Run Super-Linter
         uses: super-linter/super-linter@v7.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: main
+          # Customize linters (disable if needed)
+          VALIDATE_CHECKOV: true
+          VALIDATE_GITHUB_ACTIONS: true
+          # Output format for GitHub Security tab
+          OUTPUT_FORMAT: sarif
+          OUTPUT_FOLDER: super-linter-results
 
-      - name: Run Checkov (IaC Security)
-        uses: bridgecrewio/checkov-action@v12
-        with:
-          directory: .
-          output_format: sarif
-          output_file: checkov-results.sarif
-          soft_fail: false
-
-      - name: Upload Checkov Results
+      - name: Upload SARIF Results
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: checkov-results.sarif
+          sarif_file: super-linter-results/super-linter.sarif
