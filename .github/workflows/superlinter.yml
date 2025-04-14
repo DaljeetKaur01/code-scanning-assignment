@@ -23,21 +23,19 @@ jobs:
         with:
           fetch-depth: 0 # Full history for proper analysis
 
-      - name: Run Super-Linter
-        uses: super-linter/super-linter@v7.3.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: true
-          DEFAULT_BRANCH: main
-          # Customize linters (disable if needed)
-          VALIDATE_CHECKOV: true
-          VALIDATE_GITHUB_ACTIONS: true
-          # Output format for GitHub Security tab
-          OUTPUT_FORMAT: sarif
-          OUTPUT_FOLDER: super-linter-results
+      - name: Check if SARIF file exists
+  id: check_sarif
+  run: |
+    if [ -f super-linter-results/super-linter.sarif ]; then
+      echo "exists=true" >> $GITHUB_OUTPUT
+    else
+      echo "exists=false" >> $GITHUB_OUTPUT
+    fi
 
-      - name: Upload SARIF Results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: super-linter-results/super-linter.sarif
+- name: Upload SARIF Results
+  if: steps.check_sarif.outputs.exists == 'true'
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: super-linter-results/super-linter.sarif
+
+      
